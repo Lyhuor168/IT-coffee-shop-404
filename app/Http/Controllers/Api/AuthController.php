@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\TelegramService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -67,9 +68,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid email or password.'], 401);
         }
 
+        $user = JWTAuth::user();
+
+        $message = "🔓 <b>{$user->name}</b> បាន Login\n"
+            . "ម៉ោង: " . now()->format('H:i:s d/m/Y');
+        app(TelegramService::class)->sendMessage($message);
+
         return response()->json([
             'message' => 'Login successful.',
-            'user' => auth('api')->user(),
+            'user' => $user,
             'token' => $token,
             'token_type' => 'bearer',
             'expires_in' => JWTAuth::factory()->getTTL() * 60,
@@ -79,7 +86,16 @@ class AuthController extends Controller
     public function logout(): JsonResponse
     {
         try {
+            $user = JWTAuth::user();
+
             JWTAuth::invalidate(JWTAuth::getToken());
+
+            if ($user) {
+                $message = "🔒 <b>{$user->name}</b> បាន Logout\n"
+                    . "ម៉ោង: " . now()->format('H:i:s d/m/Y');
+                app(TelegramService::class)->sendMessage($message);
+            }
+
             return response()->json(['message' => 'Successfully logged out.']);
         } catch (\Throwable $e) {
             return response()->json(['message' => 'Failed to log out.'], 500);
@@ -105,11 +121,6 @@ class AuthController extends Controller
         return response()->json(['user' => $request->user()]);
     }
 
-    /**
-     * Handle Telegram Login Widget callback (GET from widget).
-     * Verifies the data per Telegram docs, finds or creates a user, returns an HTML page
-     * that stores the JWT in localStorage and redirects to the frontend dashboard.
-     */
     public function telegramLogin(Request $request)
     {
         $data = $request->all();
@@ -143,7 +154,6 @@ class AuthController extends Controller
             return response('Invalid Telegram login data.', 403);
         }
 
-        // Optional: check auth_date freshness (24h)
         if (time() - intval($data['auth_date']) > 86400) {
             return response('Telegram login expired.', 403);
         }
@@ -159,7 +169,6 @@ class AuthController extends Controller
         $user = User::where('telegram_id', $telegramId)->first();
 
         if (! $user) {
-            // Ensure unique email placeholder
             $email = $username ? ($username.'@telegram.local') : ('telegram_'.$telegramId.'@telegram.local');
 
             $user = User::create([
@@ -184,7 +193,6 @@ class AuthController extends Controller
 
         $userPayload = json_encode($user->toArray());
 
-        // Return a small HTML page that sets localStorage and redirects back to the SPA
         $html = <<<HTML
 <!doctype html>
 <html>

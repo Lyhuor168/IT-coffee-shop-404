@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import api from '../api/axios'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import Layout from '../components/Layout'
 
 export default function Profile() {

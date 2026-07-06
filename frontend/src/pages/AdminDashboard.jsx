@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import api from '../api/axios'
 import Layout from '../components/Layout'
 
@@ -11,9 +11,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
 
-  const loadData = async () => {
-    setError('')
-    setLoading(true)
+  const loadData = useCallback(async () => {
     try {
       if (tab === 'leaves') {
         const res = await api.get('/admin/leaves')
@@ -30,12 +28,12 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [tab])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab])
+  }, [loadData])
 
   const handleReview = async (id, status) => {
     const remark = window.prompt(`Remark for ${status} (optional):`, '')
@@ -72,12 +70,18 @@ export default function AdminDashboard() {
     }
   }
 
+  const changeTab = (t) => {
+    setTab(t)
+    setError('')
+    setLoading(true)
+  }
+
   return (
     <Layout title="Admin Dashboard">
       <div className="tabs">
-        <button className={`tab ${tab === 'leaves' ? 'tab-active' : ''}`} onClick={() => setTab('leaves')}>Leave Requests</button>
-        <button className={`tab ${tab === 'attendances' ? 'tab-active' : ''}`} onClick={() => setTab('attendances')}>Attendance</button>
-        <button className={`tab ${tab === 'users' ? 'tab-active' : ''}`} onClick={() => setTab('users')}>Users</button>
+        <button className={`tab ${tab === 'leaves' ? 'tab-active' : ''}`} onClick={() => changeTab('leaves')}>Leave Requests</button>
+        <button className={`tab ${tab === 'attendances' ? 'tab-active' : ''}`} onClick={() => changeTab('attendances')}>Attendance</button>
+        <button className={`tab ${tab === 'users' ? 'tab-active' : ''}`} onClick={() => changeTab('users')}>Users</button>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}

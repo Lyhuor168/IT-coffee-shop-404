@@ -34,6 +34,9 @@ class TelegramAuthTest extends TestCase
 
         $response = $this->postJson('/api/auth/telegram-auth', $data);
 
+        // Debug: output response body for failing 500
+        fwrite(STDERR, "RESPONSE_BODY:" . $response->getContent() . "\n");
+
         $response->assertStatus(200);
         $response->assertJsonStructure(['message', 'token', 'user']);
 

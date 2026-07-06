@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 export default function Layout({ title, children }) {
   const { user, isAdmin, logout } = useAuth()

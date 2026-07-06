@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import api from '../api/axios'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import Layout from '../components/Layout'
 
 export default function Dashboard() {
@@ -17,8 +17,7 @@ export default function Dashboard() {
   const [leaveErrors, setLeaveErrors] = useState({})
   const [leaveMessage, setLeaveMessage] = useState('')
 
-  const loadAll = async () => {
-    setError('')
+  const loadAll = useCallback(async () => {
     try {
       const [todayRes, historyRes, leavesRes] = await Promise.all([
         api.get('/attendance/today'),
@@ -33,12 +32,12 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAll()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [loadAll])
 
   const handleCheckIn = async () => {
     setActionLoading(true)

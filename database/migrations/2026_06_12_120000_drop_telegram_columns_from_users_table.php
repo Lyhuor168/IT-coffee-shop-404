@@ -6,19 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    // Neutralized: this originally dropped columns the Telegram-login feature
+    // requires, and crashed SQLite rebuilding the unique index on telegram_id.
+    // Already-migrated environments are fixed forward by the corrective
+    // migration that follows this one; this file must not be deleted since
+    // it's already recorded as run in at least one live database.
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['telegram_id', 'telegram_username', 'telegram_photo']);
-        });
+        //
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('telegram_id')->nullable();
-            $table->string('telegram_username')->nullable();
-            $table->string('telegram_photo')->nullable();
-        });
+        //
     }
 };

@@ -25,3 +25,6 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Accidental nested checkout of this same repo — never intentional.
+/IT-coffee-shop-404/

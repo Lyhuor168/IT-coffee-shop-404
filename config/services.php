@@ -29,4 +29,6 @@ return [
         'chat_id' => env('TELEGRAM_CHAT_ID'),
     ],
 
+    'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost')),
+
 ];

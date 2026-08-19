@@ -8,6 +8,8 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenExpiredException;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenInvalidException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,9 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Named 'jwt' rather than 'jwt.auth': the jwt-auth package registers
+        // its own 'jwt.auth' alias in its service provider, which would
+        // silently win over this one and skip our custom error handling.
         $middleware->alias([
-            'jwt.auth' => JwtMiddleware::class,
-            'role'     => RoleMiddleware::class,
+            'jwt'  => JwtMiddleware::class,
+            'role' => RoleMiddleware::class,
         ]);
 
         $middleware->validateCsrfTokens(except: ['api/*']);
@@ -45,6 +50,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+        });
+
+        // Fallback in case a JWT exception is ever thrown outside JwtMiddleware
+        // (e.g. directly from JWTAuth::parseToken() in a controller).
+        $exceptions->render(function (TokenExpiredException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Token has expired.'], 401);
+            }
+        });
+
+        $exceptions->render(function (TokenInvalidException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Token is invalid.'], 401);
             }
         });
     })->create();

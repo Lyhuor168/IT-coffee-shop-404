@@ -5,18 +5,16 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\TelegramAuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
-    Route::get('telegram-login', [TelegramAuthController::class, 'telegramLogin']);
     Route::post('telegram-auth', [TelegramAuthController::class, 'telegramApi']);
 });
 
-Route::middleware('jwt.auth')->group(function () {
+Route::middleware('jwt')->group(function () {
 
     Route::prefix('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
@@ -25,8 +23,6 @@ Route::middleware('jwt.auth')->group(function () {
     });
 
     Route::post('profile', [ProfileController::class, 'update']);
-
-    Route::get('dashboard', [DashboardController::class, 'index']);
 
     Route::prefix('attendance')->group(function () {
         Route::get('/', [AttendanceController::class, 'index']);
